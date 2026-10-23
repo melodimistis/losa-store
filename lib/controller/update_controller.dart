@@ -43,31 +43,84 @@ class UpdateController extends GetxController {
       confirmTextColor: Colors.white,
       buttonColor: Colors.green,
       onConfirm: () {
-        Get.back();
+        _closeDialogSafely();
+        _showDownloadProgressDialog();
         _startOtaUpdate(apkUrl);
       },
+    );
+  }
+
+  void _showDownloadProgressDialog() {
+    Get.dialog(
+      PopScope(
+        canPop: false, // Pengganti WillPopScope
+        child: AlertDialog(
+          title: const Text('Mengunduh Pembaruan...'),
+          content: Obx(
+            () => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                LinearProgressIndicator(
+                  value: downloadProgress.value / 100,
+                  backgroundColor: Colors.grey[200],
+                  color: Colors.green,
+                ),
+                const SizedBox(height: 16),
+                Text('${downloadProgress.value}%'),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 
   void _startOtaUpdate(String apkUrl) {
     try {
       isDownloading(true);
-      OtaUpdate().execute(apkUrl, destinationFilename: 'app-update.apk').listen(
-        (OtaEvent event) {
-          if (event.status == OtaStatus.DOWNLOADING) {
-            downloadProgress.value = int.tryParse(event.value ?? '0') ?? 0;
-          } else if (event.status == OtaStatus.INSTALLING) {
-            isDownloading(false);
-          } else if (event.status == OtaStatus.ALREADY_RUNNING_ERROR ||
-              event.status == OtaStatus.PERMISSION_NOT_GRANTED_ERROR) {
-            isDownloading(false);
-            Get.snackbar('Error', 'Gagal memproses update: ${event.status}');
-          }
-        },
-      );
+      downloadProgress.value = 0;
+
+      OtaUpdate()
+          .execute(apkUrl, destinationFilename: 'app-update.apk')
+          .listen(
+            (OtaEvent event) {
+              if (event.status == OtaStatus.DOWNLOADING) {
+                downloadProgress.value = int.tryParse(event.value ?? '0') ?? 0;
+              } else if (event.status == OtaStatus.INSTALLING) {
+                isDownloading(false);
+                _closeDialogSafely();
+              } else if (event.status == OtaStatus.ALREADY_RUNNING_ERROR ||
+                  event.status == OtaStatus.PERMISSION_NOT_GRANTED_ERROR ||
+                  event.status == OtaStatus.INTERNAL_ERROR ||
+                  event.status == OtaStatus.DOWNLOAD_ERROR) {
+                _handleError('Gagal mengunduh (${event.status})');
+              }
+            },
+            onError: (error) {
+              _handleError('Terjadi kesalahan: $error');
+            },
+          );
     } catch (errorMessage) {
-      isDownloading(false);
-      Get.snackbar('Koneksi Gagal', errorMessage.toString());
+      _handleError(errorMessage.toString());
     }
+  }
+
+  void _closeDialogSafely() {
+    if (Get.isDialogOpen == true) {
+      Get.back();
+    }
+  }
+
+  void _handleError(String message) {
+    isDownloading(false);
+    _closeDialogSafely();
+    Get.snackbar(
+      'Gagal Update',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
   }
 }
