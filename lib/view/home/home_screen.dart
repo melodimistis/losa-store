@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:carousel_slider_plus/carousel_slider_plus.dart';
 import 'package:losa_store/controller/update_controller.dart';
+import 'package:losa_store/view/settings/settings_page.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../controller/category_controller.dart';
 import '../../controller/product_controller.dart';
@@ -26,15 +27,27 @@ class HomeScreen extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       updateController.checkForUpdate();
     });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Losa Store'),
         backgroundColor: Colors.green,
         actions: [
+          // Tombol Pengaturan
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+          ),
+          // Tombol Keranjang
           Stack(
             children: [
               IconButton(
-                icon: Icon(Icons.shopping_cart),
+                icon: const Icon(Icons.shopping_cart),
                 onPressed: () => Get.to(() => CartScreen()),
               ),
               Obx(
@@ -180,9 +193,6 @@ class HomeScreen extends StatelessWidget {
                           children: [
                             CachedNetworkImage(
                               imageUrl: item.image,
-                              httpHeaders: const {
-                                'ngrok-skip-browser-warning': 'true',
-                              },
                               placeholder: (context, url) => const Center(
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
@@ -257,9 +267,6 @@ class HomeScreen extends StatelessWidget {
                               child: product.image.isNotEmpty
                                   ? CachedNetworkImage(
                                       imageUrl: product.image,
-                                      httpHeaders: const {
-                                        'ngrok-skip-browser-warning': 'true',
-                                      },
                                       placeholder: (context, url) =>
                                           const Center(
                                             child: CircularProgressIndicator(
