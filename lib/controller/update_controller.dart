@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:ota_update/ota_update.dart';
-import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import '../const.dart';
 
 class UpdateController extends GetxController {
@@ -26,7 +29,7 @@ class UpdateController extends GetxController {
         }
       }
     } catch (errorMessage) {
-      Get.snackbar('Koneksi Gagal', errorMessage.toString());
+      print('Update check error: $errorMessage');
     }
   }
 
@@ -45,7 +48,7 @@ class UpdateController extends GetxController {
       onConfirm: () {
         _closeDialogSafely();
         _showDownloadProgressDialog();
-        _startOtaUpdate(apkUrl);
+        _startDownloadAndInstall(apkUrl);
       },
     );
   }
@@ -53,7 +56,7 @@ class UpdateController extends GetxController {
   void _showDownloadProgressDialog() {
     Get.dialog(
       PopScope(
-        canPop: false, // Pengganti WillPopScope
+        canPop: false,
         child: AlertDialog(
           title: const Text('Mengunduh Pembaruan...'),
           content: Obx(
@@ -76,33 +79,37 @@ class UpdateController extends GetxController {
     );
   }
 
-  void _startOtaUpdate(String apkUrl) {
+  void _startDownloadAndInstall(String apkUrl) async {
     try {
       isDownloading(true);
       downloadProgress.value = 0;
 
-      OtaUpdate()
-          .execute(apkUrl, destinationFilename: 'app-update.apk')
-          .listen(
-            (OtaEvent event) {
-              if (event.status == OtaStatus.DOWNLOADING) {
-                downloadProgress.value = int.tryParse(event.value ?? '0') ?? 0;
-              } else if (event.status == OtaStatus.INSTALLING) {
-                isDownloading(false);
-                _closeDialogSafely();
-              } else if (event.status == OtaStatus.ALREADY_RUNNING_ERROR ||
-                  event.status == OtaStatus.PERMISSION_NOT_GRANTED_ERROR ||
-                  event.status == OtaStatus.INTERNAL_ERROR ||
-                  event.status == OtaStatus.DOWNLOAD_ERROR) {
-                _handleError('Gagal mengunduh (${event.status})');
-              }
-            },
-            onError: (error) {
-              _handleError('Terjadi kesalahan: $error');
-            },
-          );
+      // Ambil folder cache/temporary di HP
+      Directory tempDir = await getTemporaryDirectory();
+      String savePath = "${tempDir.path}/app-update.apk";
+
+      // Unduh APK menggunakan Dio (aman dari HTTP 302 Redirect GitHub)
+      Dio dio = Dio();
+      await dio.download(
+        apkUrl,
+        savePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            downloadProgress.value = ((received / total) * 100).toInt();
+          }
+        },
+      );
+
+      isDownloading(false);
+      _closeDialogSafely();
+
+      // Panggil Dialog Installer Android
+      final result = await OpenFilex.open(savePath);
+      if (result.type != ResultType.done) {
+        _handleError('Gagal membuka installer: ${result.message}');
+      }
     } catch (errorMessage) {
-      _handleError(errorMessage.toString());
+      _handleError('Gagal mengunduh: $errorMessage');
     }
   }
 
