@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../const.dart';
+import '../util/image_url.dart';
 
 List<Product> productFromJson(String str) => List<Product>.from(
   json.decode(str)['data'].map((x) => Product.fromJson(x)),
@@ -11,6 +11,7 @@ class Product {
   final String description;
   final double price;
   final String image;
+  final String thumb;
 
   Product({
     required this.id,
@@ -18,29 +19,15 @@ class Product {
     required this.description,
     required this.price,
     required this.image,
+    required this.thumb,
   });
 
-  factory Product.fromJson(Map<String, dynamic> data) {
-    String imageUrl = '';
-
-    if (data['image'] != null &&
-        data['image'] is List &&
-        data['image'].isNotEmpty) {
-      imageUrl = data['image'][0]['url'] ?? '';
-    } else if (data['image'] != null && data['image'] is Map) {
-      imageUrl = data['image']['url'] ?? '';
-    }
-
-    if (imageUrl.isNotEmpty && !imageUrl.startsWith('http')) {
-      imageUrl = '$baseUrl$imageUrl';
-    }
-
-    return Product(
-      id: data['id'] ?? 0,
-      name: data['name'] ?? '',
-      description: data['description'] ?? '',
-      price: (data['price'] as num?)?.toDouble() ?? 0.0,
-      image: imageUrl,
-    );
-  }
+  factory Product.fromJson(Map<String, dynamic> json) => Product(
+    id: json['id'] as int,
+    name: (json['name'] ?? '') as String,
+    description: (json['description'] ?? '') as String,
+    price: num.tryParse('${json['price']}')?.toDouble() ?? 0.0,
+    image: strapiImageUrl(json['image']),
+    thumb: strapiImageUrl(json['image'], format: 'small'),
+  );
 }

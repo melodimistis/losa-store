@@ -10,13 +10,12 @@ class CategoryProductsScreen extends StatelessWidget {
 
   CategoryProductsScreen({Key? key, required this.category}) : super(key: key);
 
-  final CategoryProductController controller = Get.put(
-    CategoryProductController(),
-  );
-
   @override
   Widget build(BuildContext context) {
-    controller.fetchProductsByCategory(category.id);
+    final controller = Get.put(
+      CategoryProductController(category.id),
+      tag: 'cat-${category.id}',
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(category.name), backgroundColor: Colors.green),

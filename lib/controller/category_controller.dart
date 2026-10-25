@@ -19,6 +19,7 @@ class CategoryController extends GetxController {
       var cachedData = HiveService.getCategories();
       if (cachedData != null) {
         categoryList.assignAll(categoryFromJson(cachedData));
+        isLoading(false);
       }
 
       var result = await RemoteCategoryService.getCategories();

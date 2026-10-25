@@ -3,18 +3,28 @@ import '../model/product.dart';
 import '../service/remote_service.dart';
 
 class CategoryProductController extends GetxController {
+  final int categoryId;
+
+  CategoryProductController(this.categoryId);
+
   var productList = <Product>[].obs;
   var isLoading = true.obs;
 
-  void fetchProductsByCategory(int categoryId) async {
+  @override
+  void onInit() {
+    super.onInit();
+    fetchProductsByCategory(categoryId);
+  }
+
+  void fetchProductsByCategory(int id) async {
     try {
       isLoading(true);
-      var result = await RemoteProductService.getProductsByCategory(categoryId);
+      var result = await RemoteProductService.getProductsByCategory(id);
       if (result != null) {
         productList.assignAll(productFromJson(result));
-      } else {
-        productList.clear();
       }
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
     } finally {
       isLoading(false);
     }

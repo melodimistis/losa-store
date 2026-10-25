@@ -7,19 +7,29 @@ class ProductController extends GetxController {
   var productList = <Product>[].obs;
   var isLoading = true.obs;
 
+  final searchQuery = ''.obs;
+  int _searchId = 0;
+
   @override
   void onInit() {
     fetchProducts();
+    debounce(
+      searchQuery,
+      searchProducts,
+      time: const Duration(milliseconds: 400),
+    );
     super.onInit();
   }
 
-  void fetchProducts() async {
+  Future<void> fetchProducts() async {
     try {
       isLoading(true);
       var cachedData = HiveService.getProducts();
       if (cachedData != null) {
         productList.assignAll(productFromJson(cachedData));
+        isLoading(false);
       }
+
       var result = await RemoteProductService.getProducts();
       if (result != null) {
         productList.assignAll(productFromJson(result));
@@ -34,23 +44,27 @@ class ProductController extends GetxController {
     }
   }
 
-  void searchProducts(String query) async {
+  Future<void> searchProducts(String query) async {
+    final myId = ++_searchId;
+    final q = query.trim();
+
+    if (q.isEmpty) {
+      await fetchProducts();
+      return;
+    }
+
     try {
-      isLoading(true);
-      if (query.trim().isEmpty) {
-        fetchProducts();
+      final result = await RemoteProductService.searchProducts(q);
+
+      if (myId != _searchId) return;
+
+      if (result != null) {
+        productList.assignAll(productFromJson(result));
       } else {
-        var result = await RemoteProductService.searchProducts(query);
-        if (result != null) {
-          productList.assignAll(productFromJson(result));
-        } else {
-          productList.clear();
-        }
+        productList.clear();
       }
     } catch (e) {
-      print("Error pencarian: $e");
-    } finally {
-      isLoading(false);
+      if (myId == _searchId) Get.snackbar('Koneksi gagal', e.toString());
     }
   }
 }

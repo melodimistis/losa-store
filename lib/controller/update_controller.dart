@@ -8,10 +8,17 @@ import 'package:dio/dio.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import '../const.dart';
+import '../util/version.dart';
 
 class UpdateController extends GetxController {
   var isDownloading = false.obs;
   var downloadProgress = 0.obs;
+
+  @override
+  void onReady() {
+    super.onReady();
+    checkForUpdate();
+  }
 
   void checkForUpdate() async {
     try {
@@ -24,17 +31,13 @@ class UpdateController extends GetxController {
         String latestVersion = data['version'];
         String apkUrl = data['apk_url'] ?? '';
 
-        if (_isNewerVersion(currentVersion, latestVersion)) {
+        if (isNewerVersion(currentVersion, latestVersion)) {
           _showUpdateDialog(latestVersion, apkUrl);
         }
       }
     } catch (errorMessage) {
       print('Update check error: $errorMessage');
     }
-  }
-
-  bool _isNewerVersion(String current, String latest) {
-    return latest.compareTo(current) > 0;
   }
 
   void _showUpdateDialog(String newVersion, String apkUrl) {
@@ -84,11 +87,9 @@ class UpdateController extends GetxController {
       isDownloading(true);
       downloadProgress.value = 0;
 
-      // Ambil folder cache/temporary di HP
       Directory tempDir = await getTemporaryDirectory();
       String savePath = "${tempDir.path}/app-update.apk";
 
-      // Unduh APK menggunakan Dio (aman dari HTTP 302 Redirect GitHub)
       Dio dio = Dio();
       await dio.download(
         apkUrl,
@@ -103,7 +104,6 @@ class UpdateController extends GetxController {
       isDownloading(false);
       _closeDialogSafely();
 
-      // Panggil Dialog Installer Android
       final result = await OpenFilex.open(savePath);
       if (result.type != ResultType.done) {
         _handleError('Gagal membuka installer: ${result.message}');

@@ -3,6 +3,7 @@ import '../model/banner.dart';
 import '../service/remote_service.dart';
 
 class BannerController extends GetxController {
+  var bannerList = <BannerModel>[].obs;
   var imageList = <String>[].obs;
   var isLoading = true.obs;
   var currentIndex = 0.obs;
@@ -18,15 +19,10 @@ class BannerController extends GetxController {
       isLoading(true);
       var result = await RemoteBannerService.getBanner();
       if (result != null) {
-        var banners = bannerFromJson(result);
-        List<String> tempImages = [];
-
-        for (var banner in banners) {
-          tempImages.addAll(banner.images);
-        }
-
-        imageList.assignAll(tempImages);
+        bannerList.assignAll(bannerFromJson(result));
       }
+    } catch (e) {
+      Get.snackbar('Koneksi gagal', e.toString());
     } finally {
       isLoading(false);
     }

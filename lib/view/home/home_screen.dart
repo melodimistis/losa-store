@@ -24,16 +24,11 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      updateController.checkForUpdate();
-    });
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Losa Store'),
         backgroundColor: Colors.green,
         actions: [
-          // Tombol Pengaturan
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
@@ -43,7 +38,6 @@ class HomeScreen extends StatelessWidget {
               );
             },
           ),
-          // Tombol Keranjang
           Stack(
             children: [
               IconButton(
@@ -88,7 +82,7 @@ class HomeScreen extends StatelessWidget {
               ),
               child: TextField(
                 onChanged: (value) {
-                  productController.searchProducts(value);
+                  productController.searchQuery.value = value;
                 },
                 decoration: InputDecoration(
                   hintText: 'Cari produk yang kamu inginkan...',

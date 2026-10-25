@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -19,98 +20,31 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey.shade300),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.blue),
-              title: const Text('Tentang Aplikasi'),
-              subtitle: const Text('Informasi versi dan pengembang'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                showAboutDialog(
-                  context: context,
-                  applicationName: 'Losa Store',
-                  applicationVersion: '1.0.2',
-                  applicationIcon: const Icon(
-                    Icons.shopping_bag,
-                    size: 48,
-                    color: Colors.blue,
+          ListTile(
+            leading: const Icon(Icons.info_outline, color: Colors.black38),
+            title: const Text('Tentang Aplikasi'),
+            subtitle: const Text('Informasi versi dan pengembang'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final info = await PackageInfo.fromPlatform();
+              if (!context.mounted) return;
+              showAboutDialog(
+                context: context,
+                applicationName: 'Losa Store',
+                applicationVersion: info.version,
+                applicationIcon: const Icon(
+                  Icons.shopping_bag,
+                  size: 48,
+                  color: Colors.green,
+                ),
+                children: const [
+                  SizedBox(height: 22),
+                  Text(
+                    'Losa Store adalah aplikasi e-commerce yang terhubung ke backend Strapi.',
                   ),
-                  children: [
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Losa Store adalah aplikasi e-commerce modern yang terhubung ke Strapi Cloud Backend.',
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey.shade300),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.blue),
-              title: const Text('Tentang Aplikasi'),
-              subtitle: const Text('Informasi versi dan pengembang'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                showAboutDialog(
-                  context: context,
-                  applicationName: 'Losa Store',
-                  applicationVersion: '1.0.2',
-                  applicationIcon: const Icon(
-                    Icons.shopping_bag,
-                    size: 48,
-                    color: Colors.blue,
-                  ),
-                  children: [
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Losa Store adalah aplikasi e-commerce modern yang terhubung ke Strapi Cloud Backend.',
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey.shade300),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.blue),
-              title: const Text('Tentang Aplikasi'),
-              subtitle: const Text('Informasi versi dan pengembang'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                showAboutDialog(
-                  context: context,
-                  applicationName: 'Losa Store',
-                  applicationVersion: '1.0.2',
-                  applicationIcon: const Icon(
-                    Icons.shopping_bag,
-                    size: 48,
-                    color: Colors.blue,
-                  ),
-                  children: [
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Losa Store adalah aplikasi e-commerce modern yang terhubung ke Strapi Cloud Backend.',
-                    ),
-                  ],
-                );
-              },
-            ),
+                ],
+              );
+            },
           ),
         ],
       ),

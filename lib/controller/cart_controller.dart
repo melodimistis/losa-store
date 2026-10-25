@@ -102,23 +102,26 @@ class CartController extends GetxController {
   }
 
   void loadCart() {
-    String? rawData = cartBox.get('items');
-    if (rawData != null) {
-      List<dynamic> decoded = jsonDecode(rawData);
+    try {
+      final raw = cartBox.get('items');
+      if (raw == null) return;
+      final list = jsonDecode(raw) as List;
       cartItems.assignAll(
-        decoded.map((data) {
-          return CartItem(
+        list.map(
+          (d) => CartItem(
             product: Product(
-              id: data['product_id'],
-              name: data['name'],
-              price: (data['price'] as num).toDouble(),
+              id: d['product_id'] as int,
+              name: (d['name'] ?? '') as String,
+              price: (d['price'] as num).toDouble(),
               description: '',
-              image: data['image'],
+              image: (d['image'] ?? '') as String,
+              thumb: (d['image'] ?? ''),
             ),
-            quantity: data['quantity'],
-          );
-        }).toList(),
+          ),
+        ),
       );
+    } catch (_) {
+      cartBox.delete('items');
     }
   }
 }
