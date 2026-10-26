@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../const.dart';
+import '../util/image_url.dart';
 
 List<BannerModel> bannerFromJson(String str) => List<BannerModel>.from(
   json.decode(str)['data'].map((x) => BannerModel.fromJson(x)),
@@ -13,24 +13,20 @@ class BannerModel {
   BannerModel({required this.id, required this.title, required this.images});
 
   factory BannerModel.fromJson(Map<String, dynamic> data) {
-    List<String> imageList = [];
+    final images = <String>[];
+    final media = data['image'];
 
-    if (data['image'] != null && data['image'] is List) {
-      for (var img in data['image']) {
-        String url = img['url'] ?? '';
-        if (url.isNotEmpty && !url.startsWith('http')) {
-          url = '$baseUrl$url';
-        }
-        if (url.isNotEmpty) {
-          imageList.add(url);
-        }
+    if (media is List) {
+      for (final img in media) {
+        final url = strapiImageUrl(img, format: 'medium');
+        if (url.isNotEmpty) images.add(url);
       }
     }
 
     return BannerModel(
       id: data['id'] ?? 0,
       title: data['title'] ?? '',
-      images: imageList,
+      images: images,
     );
   }
 }

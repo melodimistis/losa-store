@@ -8,7 +8,7 @@ import '../product/product_detail_screen.dart';
 class CategoryProductsScreen extends StatelessWidget {
   final Category category;
 
-  CategoryProductsScreen({Key? key, required this.category}) : super(key: key);
+  const CategoryProductsScreen({super.key, required this.category});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +52,8 @@ class CategoryProductsScreen extends StatelessWidget {
                       child: Center(
                         child: product.image.isNotEmpty
                             ? CachedNetworkImage(
-                                imageUrl: product.image,
+                                imageUrl: product.thumb,
+                                memCacheWidth: 500,
                                 httpHeaders: const {
                                   'ngrok-skip-browser-warning': 'true',
                                 },

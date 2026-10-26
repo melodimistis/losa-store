@@ -8,7 +8,7 @@ class ProductDetailScreen extends StatelessWidget {
   final Product product;
   final CartController cartController = Get.find<CartController>();
 
-  ProductDetailScreen({Key? key, required this.product}) : super(key: key);
+  ProductDetailScreen({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {

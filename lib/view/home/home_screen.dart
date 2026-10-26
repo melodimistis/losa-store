@@ -14,7 +14,7 @@ import '../../controller/cart_controller.dart';
 import '../cart/cart_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  HomeScreen({Key? key}) : super(key: key);
+  HomeScreen({super.key});
 
   final CategoryController categoryController = Get.put(CategoryController());
   final ProductController productController = Get.put(ProductController());
@@ -122,14 +122,25 @@ class HomeScreen extends StatelessWidget {
                   CarouselSlider.builder(
                     itemCount: bannerController.imageList.length,
                     itemBuilder: (context, index, realIndex) {
-                      var imageUrl = bannerController.imageList[index];
+                      final imageUrl = bannerController.imageList[index];
                       return Container(
                         margin: const EdgeInsets.symmetric(horizontal: 6.0),
-                        decoration: BoxDecoration(
+                        child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          image: DecorationImage(
-                            image: NetworkImage(imageUrl),
+                          child: CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            width: double.infinity,
                             fit: BoxFit.cover,
+                            memCacheWidth: 800,
+                            placeholder: (context, url) =>
+                                Container(color: Colors.grey[200]),
+                            errorWidget: (context, url, error) => Container(
+                              color: Colors.grey[200],
+                              child: const Icon(
+                                Icons.image_not_supported_outlined,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ),
                         ),
                       );
@@ -186,7 +197,8 @@ class HomeScreen extends StatelessWidget {
                         child: Column(
                           children: [
                             CachedNetworkImage(
-                              imageUrl: item.image,
+                              imageUrl: item.thumb,
+                              memCacheWidth: 150,
                               placeholder: (context, url) => const Center(
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
@@ -260,7 +272,8 @@ class HomeScreen extends StatelessWidget {
                             child: Center(
                               child: product.image.isNotEmpty
                                   ? CachedNetworkImage(
-                                      imageUrl: product.image,
+                                      imageUrl: product.thumb,
+                                      memCacheWidth: 500,
                                       placeholder: (context, url) =>
                                           const Center(
                                             child: CircularProgressIndicator(

@@ -5,7 +5,7 @@ import 'package:losa_store/view/cart/checkout_screen.dart';
 import '../../controller/cart_controller.dart';
 
 class CartScreen extends StatelessWidget {
-  CartScreen({Key? key}) : super(key: key);
+  CartScreen({super.key});
 
   final CartController cartController = Get.find<CartController>();
 

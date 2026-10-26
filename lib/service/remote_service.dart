@@ -70,29 +70,34 @@ Future<http.Response?> fetchData(String endpoint) async {
 class RemoteOrderService {
   static var client = http.Client();
 
-  static Future<bool> createOrder({
+  static Future<void> createOrder({
     required List<Map<String, dynamic>> items,
     required double totalPrice,
     required String address,
   }) async {
     try {
-      var response = await client.post(
-        Uri.parse('$baseUrl/api/orders'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'data': {
-            'items': items,
-            'total_price': totalPrice,
-            'address': address,
-            'status_checkout': 'pending',
-          },
-        }),
-      );
+      final response = await client
+          .post(
+            Uri.parse('$baseUrl/api/orders'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'data': {
+                'items': items,
+                'total_price': totalPrice,
+                'address': address,
+                'status_checkout': 'pending',
+              },
+            }),
+          )
+          .timeout(_timeout);
 
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      print("Error create order: $e");
-      return false;
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw 'Server menolak pesanan (kode ${response.statusCode}), Coba lagi nanti';
+      }
+    } on SocketException {
+      throw 'Tidak ada koneksi Internet. Mohon cek jaringan kamu.';
+    } on TimeoutException {
+      throw 'Server lambat merespon. Mohon coba lagi.';
     }
   }
 }

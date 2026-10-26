@@ -14,45 +14,84 @@ class UpdateController extends GetxController {
   var isDownloading = false.obs;
   var downloadProgress = 0.obs;
 
+  bool _force = false;
+  String _pendingVersion = '';
+  String _pendingUrl = '';
+
   @override
   void onReady() {
     super.onReady();
     checkForUpdate();
   }
 
+  bool _isSafeApkUrl(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
+  }
+
   void checkForUpdate() async {
     try {
-      PackageInfo packageInfo = await PackageInfo.fromPlatform();
-      String currentVersion = packageInfo.version;
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
 
-      var response = await http.get(Uri.parse('$baseUrl/api/app-version'));
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body)['data'];
-        String latestVersion = data['version'];
-        String apkUrl = data['apk_url'] ?? '';
+      final response = await http
+          .get(Uri.parse('$baseUrl/api/app-version'))
+          .timeout(const Duration(seconds: 30));
+      if (response.statusCode != 200) return;
 
-        if (isNewerVersion(currentVersion, latestVersion)) {
-          _showUpdateDialog(latestVersion, apkUrl);
-        }
+      final data = jsonDecode(response.body)['data'];
+      final latestVersion = data['version'] as String;
+      final apkUrl = (data['apk_url'] ?? '') as String;
+
+      if (!isNewerVersion(currentVersion, latestVersion)) return;
+
+      if (!_isSafeApkUrl(apkUrl)) {
+        debugPrint('Update dibatalkan, apk_url harus https ($apkUrl)');
+        return;
       }
-    } catch (errorMessage) {
-      print('Update check error: $errorMessage');
+
+      _force = data['force_update'] == true;
+      _pendingVersion = latestVersion;
+      _pendingUrl = apkUrl;
+      _showUpdateDialog();
+    } catch (e) {
+      debugPrint('Update check error: $e');
     }
   }
 
-  void _showUpdateDialog(String newVersion, String apkUrl) {
-    Get.defaultDialog(
-      title: 'Pembaruan Tersedia Kawan (anjay)',
-      middleText: 'Versi $newVersion sudah rilis. Update gas?',
-      textConfirm: 'Update',
-      textCancel: 'Lah ngapa?',
-      confirmTextColor: Colors.white,
-      buttonColor: Colors.green,
-      onConfirm: () {
-        _closeDialogSafely();
-        _showDownloadProgressDialog();
-        _startDownloadAndInstall(apkUrl);
-      },
+  void _showUpdateDialog() {
+    Get.dialog(
+      PopScope(
+        canPop: !_force,
+        child: AlertDialog(
+          title: const Text('Pembaruan Tersedia'),
+          content: Text(
+            _force
+                ? 'Versi $_pendingVersion wajib dipasang untuk melanjutkan.'
+                : 'Versi $_pendingVersion sudah rilis. Perbarui Sekarang?',
+          ),
+          actions: [
+            if (!_force)
+              TextButton(
+                onPressed: _closeDialogSafely,
+                child: const Text('Nanti'),
+              ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () {
+                _closeDialogSafely();
+                _showDownloadProgressDialog();
+                _startDownloadAndInstall(_pendingUrl);
+              },
+              child: const Text(
+                'Perbarui',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: !_force,
     );
   }
 
@@ -129,5 +168,6 @@ class UpdateController extends GetxController {
       backgroundColor: Colors.red,
       colorText: Colors.white,
     );
+    if (_force) _showUpdateDialog();
   }
 }

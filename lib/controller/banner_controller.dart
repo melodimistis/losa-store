@@ -20,6 +20,7 @@ class BannerController extends GetxController {
       var result = await RemoteBannerService.getBanner();
       if (result != null) {
         bannerList.assignAll(bannerFromJson(result));
+        imageList.assignAll(bannerList.expand((b) => b.images));
       }
     } catch (e) {
       Get.snackbar('Koneksi gagal', e.toString());

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../controller/cart_controller.dart';
 
 class CheckoutScreen extends StatelessWidget {
-  CheckoutScreen({Key? key}) : super(key: key);
+  CheckoutScreen({super.key});
 
   final CartController cartController = Get.find<CartController>();
   final TextEditingController addressController = TextEditingController();
@@ -95,21 +95,21 @@ class CheckoutScreen extends StatelessWidget {
                       return;
                     }
 
-                    bool success = await cartController.processCheckout(
-                      addressController.text,
+                    final error = await cartController.processCheckout(
+                      addressController.text.trim(),
                     );
-                    if (success) {
-                      Get.offAllNamed('/');
+                    if (error == null) {
+                      Get.until((route) => route.isFirst);
                       Get.snackbar(
                         'Sukses',
-                        'Pesanan berhasil dibuat!',
+                        'Pesanan berhasil dibuat',
                         backgroundColor: Colors.green,
                         colorText: Colors.white,
                       );
                     } else {
                       Get.snackbar(
                         'Gagal',
-                        'Gagal membuat pesanan. Cek koneksi anda.',
+                        error,
                         backgroundColor: Colors.red,
                         colorText: Colors.white,
                       );

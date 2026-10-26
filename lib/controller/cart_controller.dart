@@ -15,13 +15,14 @@ class CartController extends GetxController {
     cartBox.delete('items');
   }
 
-  Future<bool> processCheckout(String address) async {
-    if (cartItems.isEmpty || address.trim().isEmpty) return false;
+  Future<String?> processCheckout(String address) async {
+    if (cartItems.isEmpty) return 'Keranjang masih kosong.';
+    if (address.trim().isEmpty) return 'Alamat pengiriman harus diisi.';
 
     try {
       isCheckingOut(true);
 
-      List<Map<String, dynamic>> itemsJson = cartItems.map((item) {
+      final itemsJson = cartItems.map((item) {
         return {
           'product_id': item.product.id,
           'name': item.product.name,
@@ -30,17 +31,16 @@ class CartController extends GetxController {
         };
       }).toList();
 
-      bool success = await RemoteOrderService.createOrder(
+      await RemoteOrderService.createOrder(
         items: itemsJson,
         totalPrice: totalPrice,
-        address: address,
+        address: address.trim(),
       );
 
-      if (success) {
-        clearCart();
-      }
-
-      return success;
+      clearCart();
+      return null;
+    } catch (e) {
+      return e is String ? e : 'Terjadi kesalahan.';
     } finally {
       isCheckingOut(false);
     }
